@@ -8,7 +8,6 @@ import random
 from threading import Thread
 import logging
 
-
 # ===========================================================================================
 # -----------------------------------------CONSTANTS-----------------------------------------
 # ===========================================================================================
@@ -286,6 +285,15 @@ class GUI:
         URL = self.input_URL_post_field.get()
         if URL != '':
             self.current_URL_text.set(f"Current URL: {URL}")
+        self.url = URL
+
+        with open(PATH_JSON_CONFIGS, 'r') as json_file:
+            data_tmp = json.load(json_file)
+
+        data_tmp["lastPostURL"] = URL;
+
+        with open(PATH_JSON_CONFIGS, 'w') as json_file:
+            json.dump(data_tmp, json_file)
 
     def build_input_URL_frame(self):
 
@@ -552,15 +560,13 @@ class GUI:
         self.time_to_next_auto_like_var.set("DONE!!!")
 
     def run_thread_main_script(self):
-        self.btn_run_script.config(state=tk.DISABLED)
-
-        self.time_to_next_auto_like_var = tk.StringVar()
-        time_to_next_auto_like_label = tk.Label(self.buttonContainer_run, textvariable=self.time_to_next_auto_like_var)
-        time_to_next_auto_like_label.grid(column=0, row=4, pady=3)
-
-        self.thread = Thread(target=self.bust_accounts)
-        self.thread.daemon = True
-        self.thread.start()
+        if self.url.startswith("http"):
+            self.btn_run_script.config(state=tk.DISABLED)
+            self.thread = Thread(target=self.bust_accounts)
+            self.thread.daemon = True
+            self.thread.start()
+        else:
+            self.time_to_next_auto_like_var.set("URL is empty!!!")
 
     def build_run_area(self):
 
@@ -574,6 +580,10 @@ class GUI:
 
         self.btn_run_script = tk.Button(self.buttonContainer_run, text="Run", command=self.run_thread_main_script, width=11, height=2)
         self.btn_run_script.grid(column=0, row=3, pady=5, padx=15)
+
+        self.time_to_next_auto_like_var = tk.StringVar()
+        time_to_next_auto_like_label = tk.Label(self.buttonContainer_run, textvariable=self.time_to_next_auto_like_var)
+        time_to_next_auto_like_label.grid(column=0, row=4, pady=3)
 
 
 app = GUI()
